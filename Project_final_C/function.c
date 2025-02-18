@@ -14,6 +14,40 @@ int bookCount = 0;
 struct Member members[MAX_MEMBERS];
 int memberCount = 0;
 
+// Ðoc du lieu sach tu file
+void loadBooksFromFile() {
+    FILE *file = fopen("book.bin", "rb");
+    
+    if (file == NULL) {
+        printf("Warning: No existing book data found. Creating a new file...\n");
+        file = fopen("data/book.bin", "wb"); // Tao file moi neu chua co
+        if (file == NULL) {
+            printf("Error: Cannot create book data file.\n");
+            return;
+        }
+        fclose(file);
+        return;
+    }
+    bookCount = fread(books, sizeof(struct Book), MAX_BOOKS, file);
+    fclose(file);
+    if (bookCount == 0) {
+        printf("No books available.\n");
+    } else {
+        printf("Loaded %d books from file.\n", bookCount);
+    }
+}
+// Ghi du lieu sach vào file
+void saveBooksToFile() {
+    FILE *file = fopen("book.bin", "wb");
+    if (file == NULL) {
+        printf("Error: Unable to save book data.\n");
+        return;
+    }		
+    fwrite(books, sizeof(struct Book), bookCount, file);
+    fclose(file);
+    printf("Book data saved successfully.\n");
+}
+
 // Hien thi menu quan ly khach hang
 void showMemberMenu() {
     int choice;
@@ -55,7 +89,7 @@ void showMemberMenu() {
 // Hien thi danh sach khach hang
 void displayMembers() {
     if (memberCount == 0) {
-        printf("No members available.\n");
+    printf("No members available.\n");
     } else {
         printf("\n**** Member List ****\n");
         printf("+------------+----------------------+---------------+--------+\n");
@@ -110,13 +144,14 @@ void addMember() {
         newMember.status = true; // M?c d?nh tr?ng thái Active
 
         members[memberCount++] = newMember;
+        printf("fwtfcghhhhhhhhhhhhhhhhhhhe");
+        saveBooksToFile();
         printf("Member added successfully!\n");
 
         printf("\nDo you want to add another member? (Y/N): ");
         scanf(" %c", &choice);
         getchar();
     } while (choice == 'Y' || choice == 'y');
-
     printf("Returning to Member Management Menu...\n");
 }
 
@@ -159,6 +194,7 @@ void editMember() {
     printf("Member updated successfully!\n");
     printf("\nPress ENTER to return to the menu...");
     getchar();
+    
 }
 
 
@@ -170,7 +206,7 @@ void showMainMenu() {
           
         printf("\n*** LIBRARY MANAGEMENT ***\n");
         printf("[1] Manage Books\n");
-        printf("[2] Manage Members\n");  // Ð?m b?o tùy ch?n này có m?t
+        printf("[2] Manage Members\n"); 
         printf("[0] Exit\n");
         printf("Enter your choice: ");
         scanf("%d", &choice);
@@ -181,7 +217,7 @@ void showMainMenu() {
                 showBookMenu();
                 break;
             case 2:
-                showMemberMenu();  // G?i menu qu?n lý khách hàng
+                showMemberMenu();  // Goi menu quan ly khach hang
                 break;
             case 0:
                 printf("Exiting program...\n");
@@ -223,6 +259,16 @@ int isDuplicateBookId(const char *bookId) {
 }
 // Them sach moi ( dong thoi kiem tra trung lap )
 
+// Kiem tra trung lap tieu de sach
+int isDuplicateTitle(const char *title) {
+    for (int i = 0; i < bookCount; i++) {
+        if (strcmp(books[i].title, title) == 0) {
+            printf("Error: The book title '%s' already exists. Please enter a different title.\n", title);
+            return 1;  // Tra ve 1 neu trung lap
+        }
+    }
+    return 0;  // Tra ve 0 neu khong trung lap
+}
 void addBook() {
     if (bookCount >= MAX_BOOKS) {
         printf("Cannot add more books.\n");
@@ -232,15 +278,20 @@ void addBook() {
     char choice;
     do {
         printf("\n*** ADD NEW BOOK ***\n");
-        // Kiem tra trung lop ID
+        // Kiem tra trung lap ID
         do {
             printf("Enter Book ID: ");
             scanf("%s", newBook.bookId);
             getchar();
         } while (isDuplicateBookId(newBook.bookId));
-        printf("Enter Title: ");
-        fgets(newBook.title, sizeof(newBook.title), stdin);
-        newBook.title[strcspn(newBook.title, "\n")] = 0;
+
+        // Kiem tra trung lap tieu de
+        do {
+            printf("Enter Title: ");
+            fgets(newBook.title, sizeof(newBook.title), stdin);
+            newBook.title[strcspn(newBook.title, "\n")] = 0;
+        } while (isDuplicateTitle(newBook.title));  // Kiem tra trung lap title
+
         printf("Enter Author: ");
         fgets(newBook.author, sizeof(newBook.author), stdin);
         newBook.author[strcspn(newBook.author, "\n")] = 0;
@@ -250,9 +301,12 @@ void addBook() {
         scanf("%d", &newBook.price);
         printf("Enter Publication Date (DD MM YYYY): ");
         scanf("%d %d %d", &newBook.publication.day, &newBook.publication.month, &newBook.publication.year);
+        
         books[bookCount++] = newBook;
+        saveBooksToFile();
         printf("Book added successfully!\n");
-        // Quay lai menu hay tiep tuc?
+        
+        // Quay lai menu hay tiep tuc them sach
         printf("\nDo you want to add another book? (Y/N): ");
         scanf(" %c", &choice);
         getchar();
@@ -295,7 +349,9 @@ void editBook() {
     printf("\nPress ENTER to return to the menu...");
     getchar();
     getchar();
+    void saveBooksToFile();
 }
+
 // Xoa sach theo ID
 void deleteBook() {
     char bookId[10];
@@ -329,7 +385,9 @@ void deleteBook() {
     }
     printf("\nPress ENTER to return to the menu...");
     getchar();
+    void saveBooksToFile();
 }
+
 // Sap xep sach theo gia tien
 void sortBooksByPrice() {
     if (bookCount == 0) {
@@ -345,7 +403,7 @@ void sortBooksByPrice() {
         printf("Enter your choice: ");
         scanf("%d", &choice);
         getchar();
-        if (choice == 0) return;  // Quay l?i menu qu?n lý sách
+        if (choice == 0) return;  // Quay lai menu quan ly sach
         for (int i = 0; i < bookCount - 1; i++) {
             for (int j = i + 1; j < bookCount; j++) {
                 if ((choice == 1 && books[i].price > books[j].price) ||
@@ -371,8 +429,8 @@ void searchBookByTitle() {
     char keyword[30];
     printf("Enter book title to search (or '0' to cancel): ");
     fgets(keyword, sizeof(keyword), stdin);
-    keyword[strcspn(keyword, "\n")] = 0;  // Lo?i b? ký t? xu?ng dòng
-    if (strcmp(keyword, "0") == 0) return;  // Quay l?i menu qu?n lý sách
+    keyword[strcspn(keyword, "\n")] = 0;  // Looi bo ky tu xuong dong
+    if (strcmp(keyword, "0") == 0) return;  // Quay lai menu quan ly sách
     int found = 0;
     printf("\n**** Search Results ****\n");
     printf("+------------+------------------------------+----------------------+----------+--------+------------+\n");
@@ -394,39 +452,7 @@ void searchBookByTitle() {
     printf("\nPress ENTER to return to search menu...");
     getchar();
 }
-// Ðoc du lieu sach tu file
-void loadBooksFromFile() {
-    FILE *file = fopen("data/book.bin", "rb");
-    
-    if (file == NULL) {
-        printf("Warning: No existing book data found. Creating a new file...\n");
-        file = fopen("data/book.bin", "wb"); // Tao file moi neu chua co
-        if (file == NULL) {
-            printf("Error: Cannot create book data file.\n");
-            return;
-        }
-        fclose(file);
-        return;
-    }
-    bookCount = fread(books, sizeof(struct Book), MAX_BOOKS, file);
-    fclose(file);
-    if (bookCount == 0) {
-        printf("No books available.\n");
-    } else {
-        printf("Loaded %d books from file.\n", bookCount);
-    }
-}
-// Ghi du lieu sach vào file
-void saveBooksToFile() {
-    FILE *file = fopen("data/book.bin", "wb");
-    if (file == NULL) {
-        printf("Error: Unable to save book data.\n");
-        return;
-    }
-    fwrite(books, sizeof(struct Book), bookCount, file);
-    fclose(file);
-    printf("Book data saved successfully.\n");
-}
+
 // Kiem tra du lieu sach hop le
 int isValidBook(struct Book *book) {
     if (strlen(book->bookId) == 0 || strlen(book->title) == 0 || strlen(book->author) == 0) {
@@ -447,6 +473,7 @@ int isValidBook(struct Book *book) {
 }
 void showBookMenu() {
     int choice;
+    system ("cls");
     do {
         printf("\n========== BOOK MANAGEMENT ==========\n");
         printf("[1] Display Books\n");
