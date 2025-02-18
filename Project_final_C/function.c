@@ -141,7 +141,7 @@ void addMember() {
         scanf("%s", newMember.phone);
         getchar();
 
-        newMember.status = true; // M?c d?nh tr?ng thái Active
+        newMember.status = true; // Mac dinh trang thai Active 
 
         members[memberCount++] = newMember;
         printf("fwtfcghhhhhhhhhhhhhhhhhhhe");
